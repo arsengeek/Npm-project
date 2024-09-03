@@ -1,43 +1,53 @@
 const path = require('path');
-const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
+const MiniCssExtractPlugin = require('mini-css-extract-plugin');
+const webpack = require('webpack');
 
-module.exports = {
-    entry: './index.js',  
-    output: {
-        filename: 'main.js',
-        path: path.resolve(__dirname, 'dist'),  
-    },
-    devServer: {
-        static: './dist',
-        hot: true,  
-    },
-    plugins: [
-        new HtmlWebpackPlugin({
-            template: './index.pug',  
-        }),
-        new MiniCssExtractPlugin({ filename: '[name].css' })  
-    ],
-    module: {
-        rules: [
-            {
-                test: /\.pug$/,
-                use: [
-                    {
-                        loader: 'pug-loader',
+module.exports = (env, argv) => {
+    const isProduction = argv.mode === 'production';
+
+    return {
+        entry: './src/index.js', 
+        output: {
+            filename: 'main.js',
+            path: path.resolve(__dirname, 'dist'),
+            clean: true, 
+        },
+        mode: isProduction ? 'production' : 'development',  
+        devServer: {
+            static: path.resolve(__dirname, 'dist'),  
+            hot: true,  
+            open: true,  
+        },
+        plugins: [
+            new HtmlWebpackPlugin({
+                template: './src/index.html', 
+            }),
+            new MiniCssExtractPlugin({
+                filename: '[name].css',
+            }),
+            new webpack.HotModuleReplacementPlugin()  
+        ],
+        module: {
+            rules: [
+                {
+                    test: /\.css$/,
+                    use: [
+                        MiniCssExtractPlugin.loader,
+                        'css-loader'
+                    ]
+                },
+                {
+                    test: /\.js$/,
+                    exclude: /node_modules/,
+                    use: {
+                        loader: 'babel-loader',
                         options: {
-                            pretty: true,  
+                            presets: ['@babel/preset-env']
                         }
                     }
-                ]
-            },
-            {
-                test: /\.css$/,
-                use: [
-                    MiniCssExtractPlugin.loader,
-                    'css-loader'
-                ]
-            }
-        ]
-    }
+                }
+            ]
+        }
+    };
 };
